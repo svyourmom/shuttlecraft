@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Shuttlecraft is a macOS menu bar utility for managing sshuttle VPN connections. It's built with SwiftUI and runs as a pure menu bar application (no main window).
 
+- Project Name: Sshuttlecraft (sshuttlecraft is also an acceptable spelling)
+
 ## Development Commands
 
 ### Building and Running
@@ -24,13 +26,13 @@ Shuttlecraft is a macOS menu bar utility for managing sshuttle VPN connections. 
 - **No Main Window**: App runs purely as menu bar utility with on-demand preferences window
 
 ### Key Components
-- **Data Model**: `SSHHostConfig` - Codable struct representing SSH connection configurations
+- **Data Model**: `SSHHostConfig` - Codable struct representing SSH connection configurations (Process objects managed separately)
 - **State Management**: AppDelegate acts as single source of truth with `@Published` properties
 - **Menu Bar Integration**: NSStatusItem with dynamic icons and context menu
-- **Process Management**: Each SSH connection runs as separate Process instance
+- **Process Management**: Separate `activeProcesses` dictionary maps host UUIDs to Process instances
 
 ### SwiftUI Views
-- **PreferencesView**: Main configuration interface for managing SSH hosts
+- **PreferencesView**: Main configuration interface for managing SSH hosts (uses sheet(item:) for reliable edit functionality)
 - **AddHostView**: Modal form for adding/editing host configurations (dual-mode: add vs edit)
 - **ContentView**: Currently unused (app has no main window)
 
@@ -58,10 +60,10 @@ Shuttlecraft is a macOS menu bar utility for managing sshuttle VPN connections. 
 
 ### Current Limitations
 - sshuttle path is hardcoded to Homebrew location
-- Edit functionality has known issues (profile doesn't load correctly)
 - Limited error handling for edge cases
 
 ## macOS Integration
 - **Menu Bar Only**: Set as accessory app (hidden from dock)
+- **Compatibility**: Tested on macOS 15.5 (Sequoia/Tahoe/26)
 - **Gatekeeper**: App requires manual approval on first launch
 - **sudo Requirements**: sshuttle needs admin privileges for network changes

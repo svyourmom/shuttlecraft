@@ -12,7 +12,6 @@ struct SSHHostConfig: Identifiable, Codable {
     var excludedSubnetsString: String?
     var customSSHCommand: String?
     var status: ConnectionStatus = .disconnected
-    var process: Process?
 
     enum CodingKeys: String, CodingKey {
         case id, name, remoteHost, subnetsToForward, forwardDNS, autoAddHostnames
@@ -61,6 +60,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     private let hostConfigurationsKey = "ShuttlecraftHostConfigurations"
     private let sshuttleExecutablePath = "/opt/homebrew/bin/sshuttle"
+    
+    // Separate process management from configuration data
+    private var activeProcesses: [UUID: Process] = [:]
 
     @Published var hostConfigurations: [SSHHostConfig] {
         didSet {
@@ -79,7 +81,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             self.hostConfigurations = decodedConfigurations.map { config in
                 var mutableConfig = config
                 mutableConfig.status = .disconnected
-                mutableConfig.process = nil
                 return mutableConfig
             }
         } else {
@@ -192,8 +193,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                     self.showAlert(title: "Connection Error: \(self.hostConfigurations[hostIndex].name)",
                                    message: "Details: \(output.prefix(250))") // Show more of the error
                     self.hostConfigurations[hostIndex].status = .error
-                    self.hostConfigurations[hostIndex].process?.terminate()
-                    self.hostConfigurations[hostIndex].process = nil
+                    self.activeProcesses[hostID]?.terminate()
+                    self.activeProcesses.removeValue(forKey: hostID)
                     return
                 }
             }
@@ -207,12 +208,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let currentStatus = hostConfigurations[hostIndex].status
 
         if currentStatus == .connected || currentStatus == .connecting {
-            if let process = hostConfigurations[hostIndex].process {
+            if let process = activeProcesses[hostID] {
                 print("Disconnecting from \(hostConfigurations[hostIndex].name)...")
                 (process.standardOutput as? Pipe)?.fileHandleForReading.readabilityHandler = nil
                 (process.standardError as? Pipe)?.fileHandleForReading.readabilityHandler = nil
                 process.terminate()
-                hostConfigurations[hostIndex].process = nil
+                activeProcesses.removeValue(forKey: hostID)
             }
             hostConfigurations[hostIndex].status = .disconnected
         } else if currentStatus == .disconnected || currentStatus == .error {
@@ -248,7 +249,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                     } else if self.hostConfigurations[termHostIndex].status != .error {
                         self.hostConfigurations[termHostIndex].status = .disconnected
                     }
-                    self.hostConfigurations[termHostIndex].process = nil
+                    self.activeProcesses.removeValue(forKey: hostID)
                     (process.standardOutput as? Pipe)?.fileHandleForReading.readabilityHandler = nil
                     (process.standardError as? Pipe)?.fileHandleForReading.readabilityHandler = nil
                 }
@@ -256,7 +257,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
             do {
                 try process.run()
-                hostConfigurations[hostIndex].process = process
+                activeProcesses[hostID] = process
                 hostConfigurations[hostIndex].status = .connecting
             } catch {
                 print("Error launching sshuttle for \(hostConfig.name): \(error)")
@@ -293,14 +294,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     func applicationWillTerminate(_ aNotification: Notification) {
         // ... (applicationWillTerminate code as before) ...
         print("Shuttlecraft is quitting. Terminating active connections.")
-        for index in hostConfigurations.indices {
-            if let process = hostConfigurations[index].process, process.isRunning {
-                print("Terminating process for: \(hostConfigurations[index].name)")
+        for hostConfig in hostConfigurations {
+            if let process = activeProcesses[hostConfig.id], process.isRunning {
+                print("Terminating process for: \(hostConfig.name)")
                 (process.standardOutput as? Pipe)?.fileHandleForReading.readabilityHandler = nil
                 (process.standardError as? Pipe)?.fileHandleForReading.readabilityHandler = nil
                 process.terminate()
-                hostConfigurations[index].process = nil
+                activeProcesses.removeValue(forKey: hostConfig.id)
             }
+        }
+        for index in hostConfigurations.indices {
             if hostConfigurations[index].status == .connecting || hostConfigurations[index].status == .connected {
                  hostConfigurations[index].status = .disconnected
             }

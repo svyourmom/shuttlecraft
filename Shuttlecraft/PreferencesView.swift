@@ -3,8 +3,7 @@ import SwiftUI
 struct PreferencesView: View {
     @ObservedObject var appDelegate: AppDelegate
     
-    @State private var showingConfigSheet = false
-    @State private var hostToEdit: SSHHostConfig? = nil
+    @State private var presentedHost: SSHHostConfig? = nil
     @State private var selection: UUID?
 
     var body: some View {
@@ -52,8 +51,7 @@ struct PreferencesView: View {
 
             HStack {
                 Button(action: {
-                    hostToEdit = nil
-                    showingConfigSheet = true
+                    presentedHost = SSHHostConfig(name: "", remoteHost: "", subnetsToForward: ["0/0"])
                 }) {
                     Image(systemName: "plus.circle.fill")
                     Text("Add")
@@ -62,8 +60,7 @@ struct PreferencesView: View {
                 Button(action: {
                     if let selectedID = selection,
                        let selectedHost = appDelegate.hostConfigurations.first(where: { $0.id == selectedID }) {
-                        hostToEdit = selectedHost
-                        showingConfigSheet = true
+                        presentedHost = selectedHost
                     }
                 }) {
                     Image(systemName: "pencil.circle.fill")
@@ -85,16 +82,18 @@ struct PreferencesView: View {
 
         }
         .frame(minWidth: 580, minHeight: 500) // Matches window size in AppDelegate
-        .sheet(isPresented: $showingConfigSheet) {
-            if let host = hostToEdit {
+        .sheet(item: $presentedHost) { host in
+            if host.name.isEmpty && host.remoteHost.isEmpty {
+                // This is a new host (add mode)
+                AddHostView { newHostConfig in
+                    appDelegate.hostConfigurations.append(newHostConfig)
+                }
+            } else {
+                // This is an existing host (edit mode)
                 AddHostView(host: host) { updatedHostConfig in
                     if let index = appDelegate.hostConfigurations.firstIndex(where: { $0.id == updatedHostConfig.id }) {
                         appDelegate.hostConfigurations[index] = updatedHostConfig
                     }
-                }
-            } else {
-                AddHostView { newHostConfig in
-                    appDelegate.hostConfigurations.append(newHostConfig)
                 }
             }
         }
