@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Shuttlecraft is a macOS menu bar utility for managing sshuttle VPN connections. It's built with SwiftUI and runs as a pure menu bar application (no main window).
 
-- Project Name: Sshuttlecraft (sshuttlecraft is also an acceptable spelling)
+- Project Name: Shuttlecraft
 
 ## Development Commands
 
