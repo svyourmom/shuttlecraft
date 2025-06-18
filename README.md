@@ -22,7 +22,7 @@ This project is licensed under the GNU General Public License v3.0. A copy of th
 
 
 ## Requirements
-* A modern version of macOS.
+* **macOS Sequoia (15.5) or later** - Tested on macOS 15.5 (Tahoe/26).
 * **`sshuttle` must be installed on your system.** Shuttlecraft currently expects `sshuttle` to be located at `/opt/homebrew/bin/sshuttle`. The easiest way to install it there is via [Homebrew](https://brew.sh/):
     ```bash
     brew install sshuttle
@@ -53,8 +53,7 @@ This project is licensed under the GNU General Public License v3.0. A copy of th
 
 ## Current Status & Limitations
 * The path to the `sshuttle` executable is currently hardcoded to `/opt/homebrew/bin/sshuttle`.
-* This application is currently under development. While core features are functional, further refinements and robust error handling are ongoing.
-* Editing profiles does not load profile to edit. 
+* This application is currently under development. While core features are functional, further refinements and robust error handling are ongoing. 
 
 ## Acknowledgements
 * This application relies on Shuttle, Major thanks to the creators. https://github.com/sshuttle/sshuttle/graphs/contributors
