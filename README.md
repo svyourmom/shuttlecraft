@@ -2,18 +2,22 @@
 **Shuttlecraft** is a macOS menu bar utility designed to simplify managing and toggling your `sshuttle` VPN connections.
 ## Features
 * **Menu Bar Access:** Quickly connect and disconnect from your configured `sshuttle` hosts directly from the macOS menu bar.
+* **Modern macOS Tahoe UI:** Beautiful glass effects and modern design elements that integrate seamlessly with macOS Sequoia.
+* **VPN Mode:** One-click toggle to route all traffic (IPv4/IPv6) and DNS through your SSH connection for full VPN functionality.
+* **Star Trek Themed Icons:** Space-themed menu bar icons including the iconic Starfleet delta symbol for disconnected state.
 * **Connection Management:**
-    * Add, edit, and remove `sshuttle` host configurations through a simple preferences window.
+    * Add, edit, and remove `sshuttle` host configurations through an elegant preferences window.
     * Configure parameters for each host, including:
         * Connection Name
         * Remote SSH Host (e.g., `user@server.com`)
-        * Subnets to Forward (comma-separated)
+        * VPN Mode (routes all traffic: 0/0, ::/0 with DNS)
+        * Manual Routing: Subnets to Forward (comma-separated)
         * DNS Forwarding (`--dns`)
         * Auto Add Hostnames (`-N`)
         * Advanced options: Excluded Subnets (`-x`), Custom SSH Command (`--ssh-cmd`)
 * **Status Indication:**
     * Visual feedback in the menu for connection status (Disconnected, Connecting, Connected, Error).
-    * Dynamic menu bar icon indicating overall connection activity.   
+    * Dynamic menu bar icons: △ (disconnected), 🚀 (connected), 🛡️ (VPN mode active).   
 * **Persistent Configurations:** Your host configurations are saved and loaded across app launches using `UserDefaults`.
 
 ## License

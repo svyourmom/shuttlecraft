@@ -26,20 +26,20 @@ Shuttlecraft is a macOS menu bar utility for managing sshuttle VPN connections. 
 - **No Main Window**: App runs purely as menu bar utility with on-demand preferences window
 
 ### Key Components
-- **Data Model**: `SSHHostConfig` - Codable struct representing SSH connection configurations (Process objects managed separately)
+- **Data Model**: `SSHHostConfig` - Codable struct representing SSH connection configurations with VPN mode support (Process objects managed separately)
 - **State Management**: AppDelegate acts as single source of truth with `@Published` properties
-- **Menu Bar Integration**: NSStatusItem with dynamic icons and context menu
+- **Menu Bar Integration**: NSStatusItem with Star Trek themed text-based icons (△ disconnected, 🚀 connected, 🛡️ VPN mode)
 - **Process Management**: Separate `activeProcesses` dictionary maps host UUIDs to Process instances
 
 ### SwiftUI Views
-- **PreferencesView**: Main configuration interface for managing SSH hosts (uses sheet(item:) for reliable edit functionality)
-- **AddHostView**: Modal form for adding/editing host configurations (dual-mode: add vs edit)
+- **PreferencesView**: Modern Tahoe-style configuration interface with glass effects (.thinMaterial, .ultraThinMaterial, .regularMaterial) for managing SSH hosts (uses sheet(item:) for reliable edit functionality)
+- **AddHostView**: Enhanced modal form with VPN mode toggle, NavigationStack, and modern form elements for adding/editing host configurations (dual-mode: add vs edit)
 - **ContentView**: Currently unused (app has no main window)
 
 ### sshuttle Integration
 - **Hardcoded Path**: `/opt/homebrew/bin/sshuttle` 
 - **Output Parsing**: Real-time monitoring of sshuttle stdout/stderr for connection status
-- **Command Building**: Dynamic argument construction based on host configuration
+- **Command Building**: Dynamic argument construction based on host configuration, with VPN mode auto-configuring 0/0, ::/0 with DNS
 - **Status Detection**: Pattern matching on sshuttle output to detect connected/error states
 
 ### Data Persistence

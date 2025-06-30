@@ -12,10 +12,11 @@ struct SSHHostConfig: Identifiable, Codable {
     var excludedSubnetsString: String?
     var customSSHCommand: String?
     var status: ConnectionStatus = .disconnected
+    var vpnMode: Bool = false
 
     enum CodingKeys: String, CodingKey {
         case id, name, remoteHost, subnetsToForward, forwardDNS, autoAddHostnames
-        case excludedSubnetsString, customSSHCommand, status
+        case excludedSubnetsString, customSSHCommand, status, vpnMode
     }
     
     func buildSshuttleArguments() -> [String] {
@@ -26,13 +27,21 @@ struct SSHHostConfig: Identifiable, Codable {
         }
         args.append("-r")
         args.append(remoteHost)
-        if forwardDNS {
+        
+        // VPN mode overrides manual settings
+        if vpnMode {
             args.append("--dns")
+            args.append(contentsOf: ["0/0", "::/0"])
+        } else {
+            if forwardDNS {
+                args.append("--dns")
+            }
+            args.append(contentsOf: subnetsToForward)
         }
+        
         if autoAddHostnames {
             args.append("-N")
         }
-        args.append(contentsOf: subnetsToForward)
         if let excluded = excludedSubnetsString, !excluded.isEmpty {
             let excludedArray = excluded.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
             for subnet in excludedArray {
@@ -113,15 +122,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         return hostConfigurations.contains { $0.status == .connected }
     }
 
+    func isVPNModeActive() -> Bool {
+        return hostConfigurations.contains { $0.status == .connected && $0.vpnMode }
+    }
+
     func updateMenuBarIcon() {
         guard let button = statusItem?.button else { return }
-        if isAnyConnectionActive() {
-            button.image = NSImage(named: "yes")
-            button.setAccessibilityLabel("Shuttlecraft Active")
+        
+        if isVPNModeActive() {
+            button.title = "🛡️"
+            button.setAccessibilityLabel("Shuttlecraft VPN Mode Active")
+        } else if isAnyConnectionActive() {
+            button.title = "🚀"
+            button.setAccessibilityLabel("Shuttlecraft Connected")
         } else {
-            button.image = NSImage(named: "no")
-            button.setAccessibilityLabel("Shuttlecraft Inactive")
+            button.title = "△"
+            button.setAccessibilityLabel("Shuttlecraft Disconnected")
         }
+        
+        button.image = nil
+        button.imagePosition = .noImage
+        button.font = NSFont.systemFont(ofSize: 16)
     }
 
     func setupMenu() {
@@ -129,6 +150,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         menu?.autoenablesItems = false
         for hostConfig in hostConfigurations {
             var itemTitle = hostConfig.name
+            if hostConfig.vpnMode {
+                itemTitle += " 🔒"
+            }
             let menuItem = NSMenuItem(title: "", action: #selector(hostAction(_:)), keyEquivalent: "")
             menuItem.target = self
             menuItem.representedObject = hostConfig.id
@@ -268,7 +292,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     @objc func openPreferencesWindow() {
-        // ... (openPreferencesWindow code as before) ...
         if let existingWindow = preferencesWindow, existingWindow.isVisible {
             existingWindow.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
@@ -276,16 +299,50 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
         let preferencesView = PreferencesView(appDelegate: self)
         let newWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 580, height: 500),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            contentRect: NSRect(x: 0, y: 0, width: 640, height: 560),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
+        
+        // Enhanced Tahoe-style glass effects
+        newWindow.titlebarAppearsTransparent = true
+        newWindow.isMovableByWindowBackground = true
+        newWindow.backgroundColor = NSColor.clear
+        newWindow.hasShadow = true
+        newWindow.level = .normal
+        
+        // Refined visual effect view for modern Tahoe glass
+        let visualEffectView = NSVisualEffectView()
+        visualEffectView.material = .hudWindow
+        visualEffectView.blendingMode = .behindWindow
+        visualEffectView.state = .active
+        visualEffectView.wantsLayer = true
+        visualEffectView.layer?.cornerRadius = 12
+        visualEffectView.layer?.masksToBounds = true
+        
+        // Create hosting controller with enhanced transparency
+        let hostingController = NSHostingController(rootView: preferencesView)
+        hostingController.view.wantsLayer = true
+        hostingController.view.layer?.backgroundColor = NSColor.clear.cgColor
+        hostingController.view.layer?.cornerRadius = 12
+        hostingController.view.layer?.masksToBounds = true
+        
+        // Set up the refined visual effect view as the content view
+        newWindow.contentView = visualEffectView
+        visualEffectView.addSubview(hostingController.view)
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            hostingController.view.topAnchor.constraint(equalTo: visualEffectView.topAnchor),
+            hostingController.view.leadingAnchor.constraint(equalTo: visualEffectView.leadingAnchor),
+            hostingController.view.trailingAnchor.constraint(equalTo: visualEffectView.trailingAnchor),
+            hostingController.view.bottomAnchor.constraint(equalTo: visualEffectView.bottomAnchor)
+        ])
+        
         newWindow.center()
         newWindow.setFrameAutosaveName("PreferencesWindow")
         newWindow.isReleasedWhenClosed = false
-        newWindow.title = "Shuttlecraft Preferences"
-        newWindow.contentViewController = NSHostingController(rootView: preferencesView)
+        newWindow.title = "Shuttlecraft"
         newWindow.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         preferencesWindow = newWindow
