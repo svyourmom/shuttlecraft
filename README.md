@@ -61,4 +61,3 @@ This project is licensed under the GNU General Public License v3.0. A copy of th
 
 ## Acknowledgements
 * This application relies on Shuttle, Major thanks to the creators. https://github.com/sshuttle/sshuttle/graphs/contributors
-* AI assistance (e.g., for boilerplate code, debugging, and suggestions) was provided by Google's Gemini.
