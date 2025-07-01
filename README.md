@@ -1,10 +1,10 @@
 # Shuttlecraft
 **Shuttlecraft** is a macOS menu bar utility designed to simplify managing and toggling your `sshuttle` VPN connections.
+
 ## Features
 * **Menu Bar Access:** Quickly connect and disconnect from your configured `sshuttle` hosts directly from the macOS menu bar.
 * **Modern macOS Tahoe UI:** Beautiful glass effects and modern design elements that integrate seamlessly with macOS Sequoia.
 * **VPN Mode:** One-click toggle to route all traffic (IPv4/IPv6) and DNS through your SSH connection for full VPN functionality.
-* **Star Trek Themed Icons:** Space-themed menu bar icons including the iconic Starfleet delta symbol for disconnected state.
 * **Connection Management:**
     * Add, edit, and remove `sshuttle` host configurations through an elegant preferences window.
     * Configure parameters for each host, including:
@@ -57,7 +57,7 @@ This project is licensed under the GNU General Public License v3.0. A copy of th
 
 ## Current Status & Limitations
 * The path to the `sshuttle` executable is currently hardcoded to `/opt/homebrew/bin/sshuttle`.
-* This application is currently under development. While core features are functional, further refinements and robust error handling are ongoing. 
+* New gatekeeper seems to delete the binary.  
 
 ## Acknowledgements
 * This application relies on Shuttle, Major thanks to the creators. https://github.com/sshuttle/sshuttle/graphs/contributors
